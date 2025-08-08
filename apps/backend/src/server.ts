@@ -1,7 +1,13 @@
 import "dotenv/config";
 
 import { drizzle } from "drizzle-orm/node-postgres";
-export const db = drizzle(process.env.DATABASE_URL!);
+import { Pool } from "pg";
+
+const connectionString = process.env.DATABASE_URL!;
+
+// This client will now connect to your Supabase URL
+const client = new Pool({ connectionString });
+export const db = drizzle(client);
 
 import express, { urlencoded, json } from "express";
 import cors from "cors";
