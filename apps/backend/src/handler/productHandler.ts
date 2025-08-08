@@ -15,7 +15,7 @@ interface Product {
   name: string;
   inventoryId: string;
   sku: string;
-  quantity: string;
+  quantity: number;
   price: string;
   imageUrl?: string | undefined;
   addedById: number;
@@ -51,6 +51,7 @@ export const addProduct = async (
         .status(400)
         .json({ message: "Name, price, and stock are required." });
     }
+    const numQty = Number(quantity);
 
     // 4. Create the new product object to be saved
     const newProductData: Product = {
@@ -58,7 +59,7 @@ export const addProduct = async (
       inventoryId: "a4baa617-5e8d-48b0-b263-46042805235d",
       sku,
       price, // Ensure price is a string
-      quantity, // Ensure stock is an integer
+      quantity: numQty, // Ensure stock is an integer
       imageUrl,
       addedById: 1, // Same for the publicId
     };
