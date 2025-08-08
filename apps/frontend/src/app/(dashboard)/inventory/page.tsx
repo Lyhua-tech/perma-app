@@ -4,8 +4,9 @@ import ItemsList from "@/components/items-list";
 import { useQuery } from "@tanstack/react-query";
 
 async function fetchAllInventory() {
+  const url = process.env.NEXT_PUBLIC_BACKEND_URL;
   try {
-    const res = await fetch("http://localhost:3333/api/v1/inventories");
+    const res = await fetch(`${url}/api/v1/inventories`);
 
     if (!res.ok) {
       throw console.error("Fail to get inventory");
