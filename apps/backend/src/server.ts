@@ -21,7 +21,7 @@ app.use(urlencoded({ extended: true }));
 app.use(json());
 
 // or use dynamic CORS config:
-const allowedOrigins = ["http://localhost:3000", "https://yourdomain.com"];
+const allowedOrigins = ["http://localhost:3000", "https://perma-client.netlify.app"];
 
 app.use(
   cors({
