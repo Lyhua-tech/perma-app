@@ -4,15 +4,6 @@ import ProductList from "@/components/product-list";
 import { useQuery } from "@tanstack/react-query";
 import { useParams } from "next/navigation";
 
-export async function generateStaticParams() {
-  // Replace this with a call to your backend to get all inventory IDs
-  const inventoryIds = ["1", "2", "3"];
-
-  return inventoryIds.map((id) => ({
-    id: [id],
-  }));
-}
-
 const Page = () => {
   const { id } = useParams();
   const url = process.env.NEXT_PUBLIC_BACKEND_URL;
