@@ -1,6 +1,5 @@
 import {
   pgTable,
-  serial,
   text,
   varchar,
   uuid,
@@ -8,22 +7,40 @@ import {
   pgEnum,
   integer,
   decimal,
+  boolean,
 } from "drizzle-orm/pg-core";
 
-export const userRoleEnum = pgEnum("user_role", ["admin", "inventory_owner"]);
+export const userRoleEnum = pgEnum("user_role", [
+  "admin",
+  "inventory_owner",
+  "inventory_manager",
+]);
 
 export const users = pgTable("users", {
-  id: serial().primaryKey(),
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
   email: varchar("email", { length: 255 }).notNull().unique(),
   password_hash: varchar("password_hash", { length: 255 }).notNull(),
-  role: userRoleEnum("role").default("inventory_owner"),
+  firstName: varchar("first_name").notNull(),
+  lastName: varchar("last_name").notNull(),
+  role: userRoleEnum("role").default("inventory_manager"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
+export const refresh_tokens = pgTable("refresh_tokens", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  user_id: integer("user_id")
+    .notNull()
+    .references(() => users.id),
+  token: text("token").notNull(),
+  revoked: boolean("revoked").notNull().default(false),
+  expires_at: timestamp("expires_at").notNull(),
+  created_at: timestamp("created_at").defaultNow().notNull(),
+});
+
 export const inventories = pgTable("inventories", {
   id: uuid("id").defaultRandom().primaryKey(),
-  ownerId: serial("owner_id")
+  ownerId: integer("owner_id")
     .notNull()
     .references(() => users.id),
   name: varchar("name", { length: 255 }).notNull(),
@@ -41,7 +58,7 @@ export const products = pgTable("products", {
   quantity: integer("quantity").default(0),
   price: decimal("price", { precision: 10, scale: 2 }),
   imageUrl: varchar("image_url", { length: 255 }),
-  addedById: serial("added_by_id").references(() => users.id),
+  addedById: integer("added_by_id").references(() => users.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });

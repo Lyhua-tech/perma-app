@@ -7,13 +7,13 @@ export async function getAllInventories() {
   return await db.select().from(inventories);
 }
 
-export async function createInventory(name: string) {
+export async function createInventory(name: string, userId: number) {
   const inventoryCode = Math.floor(Math.random() * 1000000).toString();
 
   const [newInventory] = await db
     .insert(inventories)
     .values({
-      ownerId: 1, // You can make this dynamic later
+      ownerId: 1,
       name,
       inventoryCode,
     })

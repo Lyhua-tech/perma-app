@@ -2,6 +2,7 @@
 import type { Request, Response, NextFunction } from "express";
 import * as InventoryService from "../services/inventoryService.js";
 import { CustomError } from "../lib/customError.js";
+// import {authenticateJWT} from "../middleware/auth.js"
 
 export const getAllInventory = async (
   req: Request,
@@ -24,7 +25,10 @@ export const addInventory = async (
 ) => {
   try {
     const { name } = req.body;
-    const newInventory = await InventoryService.createInventory(name);
+    const newInventory = await InventoryService.createInventory(
+      name,
+      req.user!.id
+    );
     res.status(201).json(newInventory);
   } catch (error) {
     console.error(error);

@@ -15,13 +15,17 @@ import { notFound } from "./middleware/notFound.js";
 import { error } from "./middleware/error.js";
 import inventoryRoute from "./routes/inventoryRoute.js";
 import productRoute from "./routes/productRoute.js";
+import authRoute from "./routes/authRoute.js";
 
 const app = express();
 app.use(urlencoded({ extended: true }));
 app.use(json());
 
 // or use dynamic CORS config:
-const allowedOrigins = ["http://localhost:3000", "https://perma-client.netlify.app"];
+const allowedOrigins = [
+  "http://localhost:3000",
+  "https://perma-client.netlify.app",
+];
 
 app.use(
   cors({
@@ -34,7 +38,7 @@ app.use(
     },
   })
 );
-
+app.use("/auth/user", authRoute);
 app.use("/api/v1", inventoryRoute);
 app.use("/api/v1/product", productRoute);
 
