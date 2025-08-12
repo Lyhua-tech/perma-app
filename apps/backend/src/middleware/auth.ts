@@ -1,6 +1,16 @@
 import type { Request, Response, NextFunction } from "express";
 import { verifyAccessToken } from "../lib/jwttoken.js";
-import { findUserById } from "../services/authService.js";
+import { db } from "../server.js";
+import { users } from "../db/schema.js";
+import { eq } from "drizzle-orm";
+
+export async function findUserById(id: number) {
+  return db
+    .select()
+    .from(users)
+    .where(eq(users.id, id))
+    .then((r) => r[0] ?? null);
+}
 
 export async function authenticateJWT(
   req: Request,

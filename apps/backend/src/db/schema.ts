@@ -27,17 +27,6 @@ export const users = pgTable("users", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
-export const refresh_tokens = pgTable("refresh_tokens", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  user_id: integer("user_id")
-    .notNull()
-    .references(() => users.id),
-  token: text("token").notNull(),
-  revoked: boolean("revoked").notNull().default(false),
-  expires_at: timestamp("expires_at").notNull(),
-  created_at: timestamp("created_at").defaultNow().notNull(),
-});
-
 export const inventories = pgTable("inventories", {
   id: uuid("id").defaultRandom().primaryKey(),
   ownerId: integer("owner_id")

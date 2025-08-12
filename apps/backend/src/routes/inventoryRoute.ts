@@ -10,8 +10,8 @@ import { authenticateJWT } from "../middleware/auth.js";
 
 const router = Router();
 
-router.get("/inventories", getAllInventory);
-router.get("/inventory/:id", getInventory);
+router.get("/inventories", authenticateJWT, getAllInventory);
+router.get("/inventory/:id", authenticateJWT, getInventory);
 router.post("/addInventory", authenticateJWT, addInventory);
 router.put("/updateInventoryInfo/:id", modifyInventory);
 router.delete("/deleteInventory/:id", deleteInventory);

@@ -16,10 +16,12 @@ import { error } from "./middleware/error.js";
 import inventoryRoute from "./routes/inventoryRoute.js";
 import productRoute from "./routes/productRoute.js";
 import authRoute from "./routes/authRoute.js";
+import cookieParser from "cookie-parser";
 
 const app = express();
 app.use(urlencoded({ extended: true }));
 app.use(json());
+app.use(cookieParser());
 
 // or use dynamic CORS config:
 const allowedOrigins = [
@@ -36,8 +38,10 @@ app.use(
         callback(new Error("Not allowed by CORS"));
       }
     },
+    credentials: true,
   })
 );
+
 app.use("/auth/user", authRoute);
 app.use("/api/v1", inventoryRoute);
 app.use("/api/v1/product", productRoute);
