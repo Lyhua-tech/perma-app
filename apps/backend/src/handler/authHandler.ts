@@ -1,11 +1,14 @@
 import type { NextFunction, Request, Response } from "express";
-import {
-  register,
-  loginUser,
-  refreshTokens,
-  revokeRefreshToken,
-} from "../services/authService.js";
 import { CustomError } from "../lib/customError.js";
+import { db } from "../server.js";
+import { users } from "../db/schema.js";
+import { eq } from "drizzle-orm";
+import {
+  signAccessToken,
+  signRefreshToken,
+  verifyRefreshToken,
+} from "../lib/jwttoken.js";
+import { comparePassword, hashPassword } from "../lib/bcrypt.js";
 
 export const registerUser = async (
   req: Request,
@@ -17,9 +20,20 @@ export const registerUser = async (
 
     if (!firstName || !lastName || !email || !password)
       return res.status(400).json({ message: "Missing email or password" });
-    const newUser = await register(firstName, lastName, email, password);
 
-    res.status(201).json({ newUser, message: "created account successfully" });
+    const hashed_password = await hashPassword(password);
+    const [user] = await db
+      .insert(users)
+      .values({
+        firstName,
+        lastName,
+        email,
+        password_hash: hashed_password,
+        role: "inventory_manager",
+      })
+      .returning();
+
+    res.status(201).json({ user, message: "created account successfully" });
   } catch (error) {
     console.error(error);
     next(new CustomError("fail to create account.", 500));
@@ -33,18 +47,30 @@ export const login = async (
 ) => {
   try {
     const { email, password } = req.body;
-    const auth = await loginUser(email, password);
-    if (!auth) return res.status(401).json({ message: "Invalid credentials" });
 
-    // Set refresh token as httpOnly cookie (recommended) and return access token in body
-    res.cookie("jid", auth.refreshToken, {
+    const [user] = await db.select().from(users).where(eq(users.email, email));
+
+    if (!user)
+      return res.status(401).json({ message: "user is unauthenticated." });
+
+    const ok = await comparePassword(password, user.password_hash);
+    if (!ok) return res.status(401).json({ message: "Invalid Password" });
+
+    const payload = { sub: user.id, email: user.email, role: user.role };
+    const accessToken = signAccessToken(payload);
+
+    const refreshToken = signRefreshToken(payload);
+
+    res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
-      secure: false,
-      sameSite: "lax",
-      path: "/",
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
     });
 
-    res.status(201).json({ accessToken: auth.accessToken });
+    res.status(200).json({
+      message: "Login successful!",
+      accessToken: accessToken,
+    });
   } catch (error) {
     next(new CustomError("fail to login", 500));
   }
@@ -55,23 +81,28 @@ export const refreshToken = async (
   res: Response,
   next: NextFunction
 ) => {
+  const refreshToken = req.cookies.refreshToken;
+
+  if (!refreshToken) {
+    return res.status(401).send("Refresh token not found.");
+  }
+
   try {
-    const token = req.cookies?.jid ?? req.body?.refreshToken;
-    if (!token)
-      return res.status(400).json({ message: "No refresh token provided" });
+    // Verify the refresh token
+    const decoded = verifyRefreshToken(refreshToken);
 
-    const tokens = await refreshTokens(token);
-    if (!tokens)
-      return res.status(401).json({ message: "Invalid refresh token" });
+    // NOTE: In a real-world app, you should check if this refresh token
+    // is still valid or has been revoked in your database.
 
-    // rotate cookie
-    res.cookie("jid", tokens.refreshToken, {
-      httpOnly: true,
-      secure: false,
-      sameSite: "lax",
-      path: "/",
-    });
-    res.json({ accessToken: tokens.accessToken });
+    // Issue a new access token
+    const payload = {
+      sub: decoded.sub,
+      email: decoded.email,
+      role: decoded.role,
+    };
+    const accessToken = signAccessToken(payload);
+
+    res.json({ accessToken });
   } catch (error) {
     next(new CustomError("Fail to get cookie", 500));
   }
@@ -82,14 +113,12 @@ export const logout = async (
   res: Response,
   next: NextFunction
 ) => {
-  try {
-    const token = req.cookies?.jid ?? req.body?.refreshToken;
-    if (token) await revokeRefreshToken(token);
-    res.clearCookie("jid", { path: "/" });
-    res.json({ ok: true });
-  } catch (error) {
-    next(new CustomError("Fail to logout", 500));
-  }
+  res.clearCookie("refreshToken", {
+    httpOnly: true,
+    secure: false,
+    sameSite: "strict",
+  });
+  res.status(200).send("Logged out successfully.");
 };
 
 export const getProfile = async (
@@ -98,7 +127,17 @@ export const getProfile = async (
   next: NextFunction
 ) => {
   try {
-    const user = req.user!;
+    const { id } = req.user!;
+    const user = await db
+      .select({
+        id: users.id,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        email: users.email,
+        role: users.role,
+      })
+      .from(users)
+      .where(eq(users.id, id));
     res.status(200).json(user);
   } catch (error) {
     next(new CustomError("Fail to get profile information", 500));

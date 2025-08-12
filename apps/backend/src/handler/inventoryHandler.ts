@@ -1,8 +1,8 @@
-// controllers/inventoryController.ts
-import type { Request, Response, NextFunction } from "express";
-import * as InventoryService from "../services/inventoryService.js";
+import type { NextFunction, Request, Response } from "express";
+import { db } from "../server.js";
+import { inventories, products } from "../db/schema.js";
 import { CustomError } from "../lib/customError.js";
-// import {authenticateJWT} from "../middleware/auth.js"
+import { eq } from "drizzle-orm";
 
 export const getAllInventory = async (
   req: Request,
@@ -10,10 +10,9 @@ export const getAllInventory = async (
   next: NextFunction
 ) => {
   try {
-    const allInventories = await InventoryService.getAllInventories();
-    res.status(200).json({ allInventories });
+    const allinventories = await db.select().from(inventories);
+    res.json({ allinventories }).status(200);
   } catch (error) {
-    console.error(error);
     next(new CustomError("Fail to fetch inventories", 500));
   }
 };
@@ -23,17 +22,22 @@ export const addInventory = async (
   res: Response,
   next: NextFunction
 ) => {
+  const { name } = req.body;
   try {
-    const { name } = req.body;
-    const newInventory = await InventoryService.createInventory(
-      name,
-      req.user!.id
-    );
+    const inventoryCode = Math.floor(Math.random() * 1000000).toString();
+    // TODO: Set ownerId to a valid value if required by your schema
+    const [newInventory] = await db
+      .insert(inventories)
+      .values({
+        ownerId: 1,
+        name,
+        inventoryCode,
+      })
+      .returning();
+
     res.status(201).json(newInventory);
   } catch (error) {
-    console.error(error);
-
-    next(new CustomError("Failed to add inventory", 500));
+    next(new CustomError("Failed to add note", 500));
   }
 };
 
@@ -45,15 +49,24 @@ export const getInventory = async (
   try {
     const { id } = req.params;
 
-    if (!id) return res.status(404).json({ msg: "Inventory not found" });
+    if (!id) {
+      return res.status(404).json({ msg: "Inventory not found" });
+    }
 
-    const inventory = await InventoryService.getInventoryWithProducts(id);
+    const [inventory] = await db
+      .select()
+      .from(inventories)
+      .where(eq(inventories.id, id));
 
-    if (!inventory) return res.status(404).json({ msg: "Inventory not found" });
+    const productsInInventory = await db
+      .select()
+      .from(products)
+      .where(eq(products.inventoryId, id));
 
-    res.status(200).json(inventory);
+    const result = { ...inventory, products: productsInInventory };
+    res.status(200).json(result);
   } catch (error) {
-    next(new CustomError("Fail to fetch inventory", 500));
+    next(new CustomError("Fail to fetch Inventory", 500));
   }
 };
 
@@ -64,18 +77,23 @@ export const modifyInventory = async (
 ) => {
   try {
     const { id } = req.params;
-    if (!id) return res.status(404).json({ msg: "Inventory not found" });
+    if (!id) {
+      return res.status(404).json({ msg: "Inventory not found" });
+    }
 
     const { name, inventoryCode } = req.body;
-    const updatedInventory = await InventoryService.updateInventory(
-      id,
-      name,
-      inventoryCode
-    );
+    const [updatedInventory] = await db
+      .update(inventories)
+      .set({
+        name: name ?? inventories.name,
+        inventoryCode: inventoryCode ?? inventories.inventoryCode,
+      })
+      .where(eq(inventories.id, id))
+      .returning();
 
-    res.status(200).json(updatedInventory);
+    res.status(204).json(updatedInventory);
   } catch (error) {
-    next(new CustomError("Failed to update inventory", 500));
+    next(new CustomError("Failed to update rows", 500));
   }
 };
 
@@ -86,11 +104,14 @@ export const deleteInventory = async (
 ) => {
   try {
     const { id } = req.params;
-    if (!id) return res.status(404).json({ msg: "Missing id" });
 
-    await InventoryService.deleteInventoryById(id);
-    res.status(204).json({ message: "Deleted successfully" });
+    if (!id) {
+      return res.status(404).json({ msg: "missing id" });
+    }
+
+    await db.delete(inventories).where(eq(inventories.id, id));
+    res.status(204).json({ message: "delete successfully" });
   } catch (error) {
-    next(new CustomError("Fail to delete inventory", 500));
+    next(new CustomError("Fail to delete Inventory", 500));
   }
 };
