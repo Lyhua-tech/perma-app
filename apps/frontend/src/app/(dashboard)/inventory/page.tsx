@@ -2,17 +2,17 @@
 
 import ItemsList from "@/components/items-list";
 import { useQuery } from "@tanstack/react-query";
+import api from "@/lib/api";
 
 async function fetchAllInventory() {
-  const url = process.env.NEXT_PUBLIC_BACKEND_URL;
   try {
-    const res = await fetch(`${url}/api/v1/inventories`);
-
-    if (!res.ok) {
-      throw console.error("Fail to get inventory");
-    }
-    return res.json();
-  } catch (error) {}
+    const res = await api.get(`/api/v1/inventories`);
+    // Axios response: res.data contains parsed JSON
+    return res.data;
+  } catch (error) {
+    console.error("Fail to get inventory", error);
+    throw error;
+  }
 }
 
 const Page = () => {
@@ -23,7 +23,7 @@ const Page = () => {
   return (
     <div>
       <h1>Inventory</h1>
-      <ItemsList values={data?.allInventories} />
+      <ItemsList values={data?.allinventories} />
     </div>
   );
 };
