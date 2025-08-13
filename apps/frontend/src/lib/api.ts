@@ -17,10 +17,10 @@ export const setAuthToken = (token: string | null) => {
 let isRefreshing = false;
 let failedQueue: {
   resolve: (token: string) => void;
-  reject: (err: any) => void;
+  reject: (err: unknown) => void;
 }[] = [];
 
-const processQueue = (error: any, token: string | null = null) => {
+const processQueue = (error: unknown, token: string | null = null) => {
   failedQueue.forEach((prom) => {
     if (error) prom.reject(error);
     else prom.resolve(token!);
@@ -32,7 +32,7 @@ api.interceptors.response.use(
   (res) => res,
   async (error) => {
     const originalRequest = error.config;
-    const { accessToken, setTokens, logout } = useAuthStore.getState();
+    const { setTokens, logout } = useAuthStore.getState();
 
     if (
       error.response?.status === 401 &&

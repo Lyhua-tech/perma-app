@@ -2,7 +2,6 @@ import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardFooter,
   CardHeader,
   CardTitle,
@@ -61,7 +60,11 @@ const ProductCard = ({ product }: { product: Product }) => {
       </CardContent>
 
       <CardFooter className="flex flex-col gap-3 p-0 pt-4">
-        <Button className="w-full border border-neutral-300" size="lg" variant={"ghost"}>
+        <Button
+          className="w-full border border-neutral-300"
+          size="lg"
+          variant={"ghost"}
+        >
           View Details
         </Button>
 
