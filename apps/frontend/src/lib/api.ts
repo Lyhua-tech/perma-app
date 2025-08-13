@@ -2,7 +2,7 @@ import axios from "axios";
 import { useAuthStore } from "@/lib/store/authStore";
 
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:3333",
+  baseURL: process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3333",
   withCredentials: true,
 });
 
@@ -57,7 +57,8 @@ api.interceptors.response.use(
 
       try {
         const refreshApi = axios.create({
-          baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:3333",
+          baseURL:
+            process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3333",
           withCredentials: true,
         });
 
