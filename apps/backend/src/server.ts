@@ -38,10 +38,6 @@ app.use(
     credentials: true,
   })
 );
-app.use(urlencoded({ extended: true }));
-app.use(json());
-app.use(cookieParser());
-
 // CORS
 const allowedOrigins =
   process.env.ENVIRONMENT === "production"
@@ -50,6 +46,9 @@ const allowedOrigins =
         "http://localhost:3000",
         "https://perma-client.netlify.app", // dev frontend
       ];
+app.use(urlencoded({ extended: true }));
+app.use(json());
+app.use(cookieParser());
 
 // Routes
 app.use("/auth/user", authRoute);
