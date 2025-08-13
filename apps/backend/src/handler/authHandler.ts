@@ -2,13 +2,15 @@ import type { NextFunction, Request, Response } from "express";
 import { CustomError } from "../lib/customError.js";
 import { db } from "../server.js";
 import { users } from "../db/schema.js";
-import { eq } from "drizzle-orm";
+import { eq, and, gt } from "drizzle-orm";
+
 import {
   signAccessToken,
   signRefreshToken,
   verifyRefreshToken,
 } from "../lib/jwttoken.js";
 import { comparePassword, hashPassword } from "../lib/bcrypt.js";
+import { sendMail } from "../lib/sendMail.js";
 
 export const registerUser = async (
   req: Request,
@@ -141,5 +143,98 @@ export const getProfile = async (
     res.status(200).json(user);
   } catch (error) {
     next(new CustomError("Fail to get profile information", 500));
+  }
+};
+
+export const forgetPassword = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) return res.status(400).json({ message: "email is required." });
+
+    const [user] = await db.select().from(users).where(eq(users.email, email));
+
+    // Always send a generic response to prevent user enumeration
+    if (!user) {
+      return res.status(200).json({
+        message:
+          "If an account with that email exists, a password reset link has been sent.",
+      });
+    }
+    const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
+
+    const passwordResetExpires = new Date(Date.now() + 600000);
+
+    await db
+      .update(users)
+      .set({
+        resetPasswordToken: resetCode,
+        resetPasswordExpire: passwordResetExpires,
+      })
+      .where(eq(users.id, user.id));
+
+    // 5. Send the ORIGINAL token to the user's email
+    await sendMail(email, "Password Reset", `Here is the code: ${resetCode}`);
+
+    res.status(200).json({
+      message:
+        "If an account with that email exists, a password reset link has been sent.",
+    });
+  } catch (error) {
+    console.error("Forgot password error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+export const resetPassword = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { token, password } = req.body;
+
+    if (!token || !password) {
+      return res
+        .status(400)
+        .json({ message: "Token and new password are required." });
+    }
+
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(
+        and(
+          eq(users.resetPasswordToken, token),
+          gt(users.resetPasswordExpire, new Date())
+        )
+      );
+
+    if (!user) {
+      return res
+        .status(400)
+        .json({ message: "Token is invalid or has expired." });
+    }
+
+    // 3. Hash the new password and update the user
+    const newHashedPassword = await hashPassword(password);
+
+    await db
+      .update(users)
+      .set({
+        password_hash: newHashedPassword, // Ensure column name is correct ('password' vs 'password_hash')
+        resetPasswordToken: null,
+        resetPasswordExpire: null,
+      })
+      .where(eq(users.id, user.id));
+
+    res.status(200).json({ message: "Password has been reset successfully." });
+  } catch (error) {
+    console.error("Reset password error:", error);
+    res.status(500).json({ message: "Server error" });
   }
 };

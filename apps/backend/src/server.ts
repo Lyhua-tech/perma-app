@@ -10,13 +10,16 @@ const client = new Pool({ connectionString });
 export const db = drizzle(client);
 
 import express, { urlencoded, json } from "express";
+import cookieParser from "cookie-parser";
 import cors from "cors";
+
 import { notFound } from "./middleware/notFound.js";
 import { error } from "./middleware/error.js";
+
 import inventoryRoute from "./routes/inventoryRoute.js";
 import productRoute from "./routes/productRoute.js";
 import authRoute from "./routes/authRoute.js";
-import cookieParser from "cookie-parser";
+import adminRoute from "./routes/adminRoute.js";
 
 const app = express();
 app.use(urlencoded({ extended: true }));
@@ -45,6 +48,7 @@ app.use(
 app.use("/auth/user", authRoute);
 app.use("/api/v1", inventoryRoute);
 app.use("/api/v1/product", productRoute);
+app.use("/api/secure", adminRoute);
 
 app.use(notFound);
 app.use(error);
