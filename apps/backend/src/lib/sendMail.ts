@@ -5,9 +5,9 @@ const transporter = nodemailer.createTransport({
   host: "sandbox.smtp.mailtrap.io", // SMTP Host
   port: 2525,
   auth: {
-    user: "fc4bcef078b543",
+    user: process.env.MAILTRAP_ACCOUNT,
     // ✅ Use an App Password generated from your Google Account settings
-    pass: "eadbefcff4de4b",
+    pass: process.env.MAILTRAP_PASSWORD,
   },
 });
 
