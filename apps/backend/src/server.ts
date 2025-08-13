@@ -2,7 +2,7 @@ import dotenv from "dotenv";
 import path from "path";
 
 // Choose .env file based on ENV
-const envFile = `.env.${process.env.ENVIRONMENT || "local"}`;
+const envFile = `.env.${process.env.NODE_ENV || "local"}`;
 dotenv.config({ path: path.resolve(process.cwd(), envFile) });
 console.log(`Loaded env: ${envFile}`);
 
@@ -40,11 +40,11 @@ app.use(
 );
 // CORS
 const allowedOrigins =
-  process.env.ENVIRONMENT === "production"
+  process.env.NODE_ENV === "production"
     ? ["https://your-production-domain.com"]
     : [
-        "http://localhost:3000",
         "https://perma-client.netlify.app", // dev frontend
+        "http://localhost:3000",
       ];
 app.use(urlencoded({ extended: true }));
 app.use(json());
