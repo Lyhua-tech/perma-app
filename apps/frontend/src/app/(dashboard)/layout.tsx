@@ -1,14 +1,14 @@
 import { SidebarProvider } from "@/components/ui/sidebar";
-import { AppSidebar } from "@/components/app-sidebar";
+import AuthGuard from "@/components/auth-guard";
+import DashboardLayout from "@/components/app-layout"; // Import your new component
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <SidebarProvider>
-      <div className="flex min-h-screen bg-gray-100 w-full gap-4 p-3">
-        <AppSidebar />
-
-        <main className="w-full">{children}</main>
-      </div>
-    </SidebarProvider>
+    <AuthGuard>
+      <SidebarProvider>
+        {/* Use the new client component to wrap your page content */}
+        <DashboardLayout>{children}</DashboardLayout>
+      </SidebarProvider>
+    </AuthGuard>
   );
 }

@@ -44,10 +44,15 @@ export function LoginForm() {
     mutationFn: (data: z.infer<typeof FormSchema>) =>
       loginAction(data.email, data.password),
 
-    onSuccess: () => {
-      // 3. On success, we just show the toast and redirect. The store has already updated the state.
-      toast.success("Login successful! Redirecting...");
-      router.push("/inventory"); // Or wherever you want to redirect
+    onSuccess: (user) => {
+      toast.success(`Welcome back, ${user.email}!`);
+
+      // ✅ Implement the role-based redirect
+      if (user.role === "admin") {
+        router.push("/admin"); // Admins go to the admin page
+      } else {
+        router.push("/inventory"); // All other users go to inventory
+      }
     },
 
     onError: (error: AxiosError<ApiError>) => {
@@ -75,18 +80,20 @@ export function LoginForm() {
 
   return (
     // We wrap everything in a div for better structure
-    <div className="flex flex-col items-center justify-center w-full">
+    <div className="flex flex-col items-center justify-center w-full md:text-neutral-800 text-white">
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit(onSubmit)}
-          className="w-full max-w-sm space-y-4" // Use max-w for better responsiveness
+          className="w-full max-w-sm space-y-4"
         >
           <FormField
             control={form.control}
             name="email"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Email</FormLabel>
+                <FormLabel className="md:text-black text-white">
+                  Email
+                </FormLabel>
                 <FormControl>
                   <Input placeholder="you@example.com" {...field} />
                 </FormControl>
@@ -99,7 +106,9 @@ export function LoginForm() {
             name="password"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Password</FormLabel>
+                <FormLabel className="md:text-black text-white">
+                  Password
+                </FormLabel>
                 <FormControl>
                   <Input type="password" placeholder="••••••••" {...field} />
                 </FormControl>
@@ -118,8 +127,14 @@ export function LoginForm() {
       </Form>
       <p className="text-sm mt-4 text-center text-muted-foreground">
         Don&apos;t have an account?{" "}
-        <Link href={"/register"} className="underline hover:text-primary">
+        <Link href={"/signup"} className="underline hover:text-primary">
           Sign up
+        </Link>
+      </p>
+      <p className="text-sm mt-4 text-center text-muted-foreground">
+        Forget Password ?{" "}
+        <Link href={"/reset-password"} className="underline hover:text-primary">
+          Forgot password
         </Link>
       </p>
     </div>
