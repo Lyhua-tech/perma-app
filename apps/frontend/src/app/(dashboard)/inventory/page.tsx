@@ -16,7 +16,7 @@ async function fetchAllInventory() {
 }
 
 const Page = () => {
-  const { isLoading, isError, error, data } = useQuery({
+  const { data } = useQuery({
     queryFn: fetchAllInventory,
     queryKey: ["inventory"],
   });

@@ -47,7 +47,7 @@ const items = [
 ];
 
 export function AppSidebar() {
-  const { open, openMobile } = useSidebar();
+  const { open } = useSidebar();
   return (
     <Sidebar className="m-3 rounded-lg" collapsible="icon">
       <SidebarContent>

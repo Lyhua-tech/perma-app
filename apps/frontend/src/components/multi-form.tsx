@@ -69,7 +69,7 @@ export const GeneratedForm = () => {
     handleSubmit,
     control,
     trigger,
-    formState: { errors },
+    formState: {},
   } = form;
 
   const processForm = async (data: FormData) => {
