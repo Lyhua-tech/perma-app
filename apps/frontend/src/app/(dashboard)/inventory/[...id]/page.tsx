@@ -1,12 +1,12 @@
 "use client";
 
 import ProductList from "@/components/product-list";
+import api from "@/lib/api";
 import { useQuery } from "@tanstack/react-query";
 import { useParams } from "next/navigation";
 
 const Page = () => {
   const { id } = useParams();
-  const url = process.env.NEXT_PUBLIC_BACKEND_URL;
   const {
     isPending,
     isError,
@@ -14,10 +14,8 @@ const Page = () => {
     data: inventory,
   } = useQuery({
     queryKey: ["repoData"],
-    queryFn: () =>
-      fetch(`${url}/api/v1/inventory/${id}`).then((res) => res.json()),
+    queryFn: () => api.get(`api/v1/inventory/${id}`).then((res) => res.data),
   });
-  // src/app/(dashboard)/inventory/[...id]/page.tsx
 
   if (isPending) return <div>...loading</div>;
 

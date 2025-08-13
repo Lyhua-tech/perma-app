@@ -10,18 +10,27 @@ const client = new Pool({ connectionString });
 export const db = drizzle(client);
 
 import express, { urlencoded, json } from "express";
+import cookieParser from "cookie-parser";
 import cors from "cors";
+
 import { notFound } from "./middleware/notFound.js";
 import { error } from "./middleware/error.js";
+
 import inventoryRoute from "./routes/inventoryRoute.js";
 import productRoute from "./routes/productRoute.js";
+import authRoute from "./routes/authRoute.js";
+import adminRoute from "./routes/adminRoute.js";
 
 const app = express();
 app.use(urlencoded({ extended: true }));
 app.use(json());
+app.use(cookieParser());
 
 // or use dynamic CORS config:
-const allowedOrigins = ["http://localhost:3000", "https://perma-client.netlify.app"];
+const allowedOrigins = [
+  "http://localhost:3000",
+  "https://perma-client.netlify.app",
+];
 
 app.use(
   cors({
@@ -32,11 +41,14 @@ app.use(
         callback(new Error("Not allowed by CORS"));
       }
     },
+    credentials: true,
   })
 );
 
+app.use("/auth/user", authRoute);
 app.use("/api/v1", inventoryRoute);
 app.use("/api/v1/product", productRoute);
+app.use("/api/secure", adminRoute);
 
 app.use(notFound);
 app.use(error);
