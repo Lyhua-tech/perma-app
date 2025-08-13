@@ -25,18 +25,6 @@ const client = new Pool({ connectionString });
 export const db = drizzle(client);
 
 const app = express();
-app.use(urlencoded({ extended: true }));
-app.use(json());
-app.use(cookieParser());
-
-// CORS
-const allowedOrigins =
-  process.env.ENVIRONMENT === "production"
-    ? ["https://your-production-domain.com"]
-    : [
-        "http://localhost:3000",
-        "https://perma-client.netlify.app", // dev frontend
-      ];
 
 app.use(
   cors({
@@ -50,6 +38,18 @@ app.use(
     credentials: true,
   })
 );
+app.use(urlencoded({ extended: true }));
+app.use(json());
+app.use(cookieParser());
+
+// CORS
+const allowedOrigins =
+  process.env.ENVIRONMENT === "production"
+    ? ["https://your-production-domain.com"]
+    : [
+        "http://localhost:3000",
+        "https://perma-client.netlify.app", // dev frontend
+      ];
 
 // Routes
 app.use("/auth/user", authRoute);
