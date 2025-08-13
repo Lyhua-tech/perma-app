@@ -12,6 +12,8 @@ import {
 import { comparePassword, hashPassword } from "../lib/bcrypt.js";
 import { sendMail } from "../lib/sendMail.js";
 
+const isProduction = process.env.NODE_ENV === "production";
+
 export const registerUser = async (
   req: Request,
   res: Response,
@@ -65,8 +67,9 @@ export const login = async (
 
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      secure: isProduction,
+      sameSite: isProduction ? "none" : "lax",
+      path: "/",
     });
 
     res.status(200).json({
@@ -117,8 +120,9 @@ export const logout = async (
 ) => {
   res.clearCookie("refreshToken", {
     httpOnly: true,
-    secure: false,
-    sameSite: "strict",
+    secure: isProduction,
+    sameSite: isProduction ? "none" : "lax",
+    path: "/",
   });
   res.status(200).send("Logged out successfully.");
 };
