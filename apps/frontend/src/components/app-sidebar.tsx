@@ -5,6 +5,7 @@ import { Calendar, Home, Inbox, Search, Settings } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
@@ -16,6 +17,13 @@ import {
 } from "@/components/ui/sidebar";
 
 import clsx from "clsx";
+import { Button } from "./ui/button";
+import { useMutation } from "@tanstack/react-query";
+import { useAuthStore } from "@/lib/store/authStore";
+import { toast } from "sonner";
+import { AxiosError } from "axios";
+import { ApiError } from "next/dist/server/api-utils";
+import { useRouter } from "next/navigation";
 
 // Menu items.
 const items = [
@@ -47,7 +55,32 @@ const items = [
 ];
 
 export function AppSidebar() {
+  const logoutAction = useAuthStore((state) => state.logout);
+
+  const router = useRouter();
+  const mutation = useMutation({
+    mutationFn: () => logoutAction(),
+
+    onSuccess: () => {
+      toast.success(`Welcome back`);
+
+      router.push("/admin");
+    },
+
+    onError: (error: AxiosError<ApiError>) => {
+      // 4. We can provide a more specific error message from the backend.
+      const errorMessage =
+        error.response?.data?.message ||
+        "Invalid credentials. Please try again.";
+      toast.error(errorMessage);
+      console.error(error);
+    },
+  });
   const { open } = useSidebar();
+
+  const handleLogout = () => {
+    mutation.mutate;
+  };
   return (
     <Sidebar className="m-3 rounded-lg" collapsible="icon">
       <SidebarContent>
@@ -83,6 +116,9 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+      <SidebarFooter>
+        <Button onClick={logoutAction}>Log out</Button>
+      </SidebarFooter>
     </Sidebar>
   );
 }

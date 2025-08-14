@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { jwtDecode } from "jwt-decode";
 import api, { setAuthToken } from "../api"; // Assuming your api.ts is in ../
+import { toast } from "sonner";
 
 // Define the shape of the user object returned from your API
 interface User {
@@ -56,7 +57,8 @@ export const useAuthStore = create(
 
       logout: async () => {
         try {
-          await api.post("/auth/user/logout");
+          const ok = await api.post("/auth/user/logout");
+          if (ok) toast.success("Successfully logout.");
         } catch (error) {
           console.error("Server logout failed", error);
         } finally {

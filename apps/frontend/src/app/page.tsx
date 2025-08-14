@@ -1,7 +1,14 @@
-export default function Home() {
+import { HeroSection } from "@/components/hero-section";
+import Navbar from "@/components/navbar";
+
+export default function HomePage() {
   return (
     <div>
-      <p>Hello Perma</p>
+      <Navbar />
+
+      <HeroSection />
+
+      
     </div>
   );
 }
